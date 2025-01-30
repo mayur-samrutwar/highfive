@@ -14,34 +14,35 @@ const container = {
 };
 
 const item = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 10, opacity: 0 },
   show: { y: 0, opacity: 1 }
 };
 
 export default function Contests() {
   const [contests, setContests] = useState([]);
+  const [filter, setFilter] = useState('all'); // 'all', 'active', 'upcoming'
 
   useEffect(() => {
     // Dummy data - in real app this would be an API call
     setContests([
       {
         id: 1,
-        title: "Crypto Punks Championship",
+        title: "CryptoPunks League S1",
         deadline: "2024-04-01",
         entryFee: 0.1,
-        totalPrize: 100000,
-        nftCount: 5,
-        participants: 128,
+        prizePool: "10.5 ETH",
+        playerCount: "24/32",
+        timeLeft: "2d 14h",
         status: "active"
       },
       {
         id: 2,
-        title: "Bored Ape Collection",
+        title: "BAYC Tournament",
         deadline: "2024-03-28",
         entryFee: 0.2,
-        totalPrize: 250000,
-        nftCount: 3,
-        participants: 256,
+        prizePool: "25.0 ETH",
+        playerCount: "16/32",
+        timeLeft: "5d 8h",
         status: "upcoming"
       }
     ]);
@@ -49,17 +50,41 @@ export default function Contests() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-background to-purple-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl md:text-6xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-            Active Contests
-          </h1>
-          
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+            <h1 className="text-2xl font-medium text-black mb-6 md:mb-0">
+              Active Contests
+            </h1>
+            
+            <div className="flex gap-4">
+              {['all', 'active', 'upcoming'].map((type) => (
+                <motion.button
+                  key={type}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => setFilter(type)}
+                  className={`
+                    px-4 py-2 rounded-md text-[15px] tracking-wide transition-all duration-300
+                    ${filter === type 
+                      ? 'bg-black text-white' 
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                    }
+                  `}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Contests Grid */}
           <motion.div 
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 gap-6"
           >
             {contests.map((contest) => (
               <motion.div key={contest.id} variants={item}>
