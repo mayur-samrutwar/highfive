@@ -16,7 +16,7 @@ export default function Layout({ children }) {
           {children}
         </motion.main>
       </AnimatePresence>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
