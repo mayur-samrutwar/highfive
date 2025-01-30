@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
+import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
 
 export default function Header() {
-  const [isConnected, setIsConnected] = useState(false);
   const router = useRouter();
+  const { address, isConnected } = useAppKitAccount();
+  const { open } = useAppKit();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -13,8 +15,8 @@ export default function Header() {
     { name: 'Create Contest', href: '/contest/create', adminOnly: true },
   ];
 
-  const connectWallet = () => {
-    setIsConnected(true);
+  const formatAddress = (address) => {
+    return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
   };
 
   return (
@@ -48,20 +50,25 @@ export default function Header() {
             ))}
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={connectWallet}
-            className={`
-              px-5 py-2 rounded-md text-[15px] tracking-wide transition-all duration-300
-              ${isConnected 
-                ? 'bg-neutral-50 text-neutral-900 border border-neutral-200 hover:bg-neutral-100'
-                : 'bg-neutral-900 text-white hover:bg-black'
-              }
-            `}
-          >
-            {isConnected ? '0x1234...5678' : 'Connect wallet'}
-          </motion.button>
+          {isConnected ? (
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => open({ view: 'Account' })}
+              className="px-5 py-2 rounded-md text-[15px] tracking-wide transition-all duration-300 bg-neutral-50 text-neutral-900 border border-neutral-200 hover:bg-neutral-100"
+            >
+              {formatAddress(address)}
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => open()}
+              className="px-5 py-2 rounded-md text-[15px] tracking-wide transition-all duration-300 bg-black text-white hover:bg-neutral-900"
+            >
+              Connect Wallet
+            </motion.button>
+          )}
         </div>
       </nav>
     </header>
