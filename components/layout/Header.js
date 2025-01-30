@@ -18,30 +18,30 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed w-full z-50 bg-black/30 backdrop-blur-lg border-b border-white/10">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="fixed w-full z-50 bg-white/98 backdrop-blur-sm border-b border-neutral-100">
+      <nav className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/">
             <motion.div 
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.01 }}
               className="flex items-center"
             >
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text">
+              <span className="text-xl font-medium tracking-tight text-black">
                 High Five
               </span>
             </motion.div>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-10">
             {navigation.map((item) => (
               <Link 
                 key={item.name} 
                 href={item.href}
                 className={`${
                   router.pathname === item.href
-                    ? 'text-purple-400'
-                    : 'text-gray-300 hover:text-white'
-                } transition-colors duration-200`}
+                    ? 'text-black font-normal'
+                    : 'text-neutral-400 hover:text-neutral-900'
+                } text-[15px] tracking-wide transition-colors duration-300`}
               >
                 {item.name}
               </Link>
@@ -49,18 +49,18 @@ export default function Header() {
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={connectWallet}
             className={`
-              px-4 py-2 rounded-xl font-semibold
+              px-5 py-2 rounded-md text-[15px] tracking-wide transition-all duration-300
               ${isConnected 
-                ? 'bg-green-500 text-white'
-                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                ? 'bg-neutral-50 text-neutral-900 border border-neutral-200 hover:bg-neutral-100'
+                : 'bg-neutral-900 text-white hover:bg-black'
               }
             `}
           >
-            {isConnected ? '0x1234...5678' : 'Connect Wallet'}
+            {isConnected ? '0x1234...5678' : 'Connect wallet'}
           </motion.button>
         </div>
       </nav>

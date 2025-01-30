@@ -2,62 +2,53 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function Footer() {
+  const links = [
+    { name: 'Contests', href: '/contest' },
+    { name: 'Leaderboard', href: '/leaderboard' },
+    { name: 'Twitter', href: 'https://twitter.com', external: true },
+    { name: 'Discord', href: 'https://discord.com', external: true },
+  ];
+
   return (
-    <footer className="bg-black/30 backdrop-blur-lg border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text mb-4">
+    <footer className="bg-white border-t border-neutral-100">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col items-center space-y-8">
+          <Link href="/">
+            <span className="text-lg font-medium tracking-tight text-black">
               High Five
-            </h3>
-            <p className="text-gray-400">
-              The ultimate NFT fantasy game platform where strategy meets opportunity.
-            </p>
-          </div>
+            </span>
+          </Link>
           
-          <div>
-            <h4 className="text-white font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/contest" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Active Contests
-                </Link>
-              </li>
-              <li>
-                <Link href="/leaderboard" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Leaderboard
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-white font-semibold mb-4">Connect</h4>
-            <div className="flex space-x-4">
-              <motion.a
-                whileHover={{ scale: 1.1 }}
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
+          <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+            {links.map((link) => (
+              <motion.div
+                key={link.name}
+                whileHover={{ scale: 1.01 }}
               >
-                Twitter
-              </motion.a>
-              <motion.a
-                whileHover={{ scale: 1.1 }}
-                href="https://discord.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                Discord
-              </motion.a>
-            </div>
+                {link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[15px] text-neutral-500 hover:text-black transition-colors duration-300"
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="text-[15px] text-neutral-500 hover:text-black transition-colors duration-300"
+                  >
+                    {link.name}
+                  </Link>
+                )}
+              </motion.div>
+            ))}
+          </nav>
+
+          <div className="text-[15px] text-neutral-400">
+            © {new Date().getFullYear()} High Five
           </div>
-        </div>
-        
-        <div className="mt-8 pt-8 border-t border-white/10 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} High Five. All rights reserved.</p>
         </div>
       </div>
     </footer>
