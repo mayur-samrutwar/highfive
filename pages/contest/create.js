@@ -7,7 +7,6 @@ export default function CreateContest() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     deadline: '',
     entryFee: '',
     totalPrize: '',
@@ -52,18 +51,6 @@ export default function CreateContest() {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={inputClasses}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className={labelClasses}>Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="4"
                   className={inputClasses}
                   required
                 />
