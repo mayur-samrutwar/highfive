@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BUDGET_LIMIT = 10000; // $10,000 USD budget limit
+const API_KEY = process.env.NEXT_PUBLIC_UNLEASH_API_KEY;
 
 export default function NFTSelector({ contestId, nftCount }) {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
@@ -9,14 +10,61 @@ export default function NFTSelector({ contestId, nftCount }) {
   const [spentBudget, setSpentBudget] = useState(0);
 
   useEffect(() => {
-    // Dummy NFT data - would be API call in real app
-    setAvailableNFTs([
-      { id: 1, name: "Bored Ape #1234", price: 4500, collection: "BAYC", image: "https://placehold.co/400x400" },
-      { id: 2, name: "Crypto Punk #5678", price: 3800, collection: "CryptoPunks", image: "https://placehold.co/400x400" },
-      { id: 3, name: "Doodle #9012", price: 2200, collection: "Doodles", image: "https://placehold.co/400x400" },
-      { id: 4, name: "Azuki #3456", price: 2800, collection: "Azuki", image: "https://placehold.co/400x400" },
-      { id: 5, name: "Clone X #7890", price: 2100, collection: "CloneX", image: "https://placehold.co/400x400" },
-    ]);
+    const fetchNFTData = async () => {
+      try {
+        const response = await fetch(
+          'https://api.unleashnfts.com/api/v2/nft/marketplace/analytics?' + 
+          new URLSearchParams({
+            blockchain: 'full',
+            time_range: '24h',
+            sort_by: 'name',
+            sort_order: 'desc',
+            offset: '0',
+            limit: '100'
+          }), {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json',
+            'x-api-key': API_KEY
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch marketplace data');
+        }
+
+        const marketplaceData = await response.json();
+        console.log('Marketplace Data:', marketplaceData);
+
+        // Transform the data into NFT format
+        const nfts = marketplaceData.data.map((item, index) => ({
+          id: index + 1,
+          name: item.name,
+          price: Math.floor(Math.random() * 3000) + 1000, // Random price between 1000-4000
+          collection: item.name,
+          blockchain: item.blockchain,
+          image: item.thumbnail_url || "https://placehold.co/400x400",
+          volume: item.volume
+        }));
+
+        console.log('Transformed NFTs:', nfts);
+        setAvailableNFTs(nfts);
+
+      } catch (error) {
+        console.error('API Error:', error);
+        // Fallback to dummy data
+        const fallbackData = [
+          { id: 1, name: "OpenSea", price: 4500, collection: "OpenSea", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 2, name: "Blur", price: 3800, collection: "Blur", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 3, name: "X2Y2", price: 2200, collection: "X2Y2", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 4, name: "LooksRare", price: 2800, collection: "LooksRare", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 5, name: "Rarible", price: 2100, collection: "Rarible", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+        ];
+        setAvailableNFTs(fallbackData);
+      }
+    };
+
+    fetchNFTData();
   }, []);
 
   const handleNFTSelect = (nft) => {
@@ -73,6 +121,12 @@ export default function NFTSelector({ contestId, nftCount }) {
               `}
               onClick={() => !isDisabled && handleNFTSelect(nft)}
             >
+              <div className="absolute top-2 right-2 z-10">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                  {nft.blockchain}
+                </span>
+              </div>
+              
               <div className="p-4">
                 <img 
                   src={nft.image} 
@@ -90,7 +144,7 @@ export default function NFTSelector({ contestId, nftCount }) {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute top-2 right-2 bg-black rounded-full p-1"
+                  className="absolute top-2 left-2 bg-black rounded-full p-1"
                 >
                   <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
