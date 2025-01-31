@@ -2,6 +2,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
+import { useWriteContract, useSimulateContract } from 'wagmi';
+import { parseEther } from 'viem';
+
+const CONTRACT_ADDRESS = '0xa51084ce30E70F88b9E2C2e5fFF175B94cA909C9';
+const CONTRACT_ABI = [
+  {
+    name: 'createContest',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'title', type: 'string' },
+      { name: 'deadline', type: 'uint256' },
+      { name: 'entryFee', type: 'uint256' },
+      { name: 'nftCount', type: 'uint256' }
+    ],
+    outputs: []
+  }
+];
 
 export default function CreateContest() {
   const router = useRouter();
@@ -9,10 +27,48 @@ export default function CreateContest() {
     title: '',
     deadline: '',
     entryFee: '',
-    totalPrize: '',
-    nftCount: '',
-    budget: ''
+    nftCount: ''
   });
+
+  const { data: simulateData, error: simulateError } = useSimulateContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'createContest',
+    args: formData.title && formData.deadline ? [
+      formData.title,
+      BigInt(Math.floor(new Date(formData.deadline).getTime() / 1000)),
+      parseEther(formData.entryFee || '0'),
+      BigInt(formData.nftCount || '0')
+    ] : undefined,
+  });
+
+  const { writeContract, isPending, error } = useWriteContract();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const deadlineDate = new Date(formData.deadline);
+      const deadlineTimestamp = Math.floor(deadlineDate.getTime() / 1000);
+      
+      await writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'createContest',
+        args: [
+          formData.title,
+          BigInt(deadlineTimestamp),
+          parseEther(formData.entryFee),
+          BigInt(formData.nftCount)
+        ]
+      });
+
+      router.push('/contest');
+    } catch (error) {
+      console.error('Error creating contest:', error);
+      alert('Failed to create contest. Please try again.');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,13 +76,6 @@ export default function CreateContest() {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Submit logic here - would be API call in real app
-    alert('Contest created successfully!');
-    router.push('/contest');
   };
 
   const inputClasses = "w-full bg-white border border-neutral-200 rounded-lg px-4 py-3 text-black placeholder-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors duration-300";
@@ -83,35 +132,11 @@ export default function CreateContest() {
                 </div>
 
                 <div>
-                  <label className={labelClasses}>Total Prize ($)</label>
-                  <input
-                    type="number"
-                    name="totalPrize"
-                    value={formData.totalPrize}
-                    onChange={handleChange}
-                    className={inputClasses}
-                    required
-                  />
-                </div>
-
-                <div>
                   <label className={labelClasses}>Number of NFTs</label>
                   <input
                     type="number"
                     name="nftCount"
                     value={formData.nftCount}
-                    onChange={handleChange}
-                    className={inputClasses}
-                    required
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className={labelClasses}>Budget per Player ($)</label>
-                  <input
-                    type="number"
-                    name="budget"
-                    value={formData.budget}
                     onChange={handleChange}
                     className={inputClasses}
                     required
@@ -123,10 +148,17 @@ export default function CreateContest() {
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 type="submit"
-                className="w-full bg-black text-white py-4 rounded-lg font-medium text-[15px] tracking-wide transition-all duration-300 mt-8"
+                disabled={isPending || simulateError}
+                className="w-full bg-black text-white py-4 rounded-lg font-medium text-[15px] tracking-wide transition-all duration-300 mt-8 disabled:opacity-50"
               >
-                Create Contest
+                {isPending ? 'Creating Contest...' : 'Create Contest'}
               </motion.button>
+
+              {error && (
+                <div className="text-red-600 text-center">
+                  {error.message}
+                </div>
+              )}
             </form>
           </motion.div>
         </div>

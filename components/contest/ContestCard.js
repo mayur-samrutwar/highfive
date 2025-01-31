@@ -5,13 +5,13 @@ export default function ContestCard({ contest }) {
   return (
     <Link href={`/contest/${contest.id}`}>
       <motion.div
-        whileHover={{ scale: 1.01 }}
-        className="bg-white border border-neutral-200 rounded-lg p-6 transition-all duration-300"
+        whileHover={{ scale: 1.02 }}
+        className="bg-white border border-neutral-200 rounded-lg p-4 transition-all duration-300 h-full"
       >
-        <div className="flex justify-between items-start mb-6">
-          <h3 className="text-lg font-medium text-black">{contest.title}</h3>
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-base font-medium text-black line-clamp-1">{contest.title}</h3>
           <span className={`
-            px-3 py-1 rounded-full text-[13px] tracking-wide
+            px-2 py-0.5 rounded-full text-xs tracking-wide ml-2 whitespace-nowrap
             ${contest.status === 'active' 
               ? 'bg-neutral-900 text-white' 
               : 'bg-neutral-100 text-neutral-600'
@@ -21,21 +21,21 @@ export default function ContestCard({ contest }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <div className="text-neutral-500 text-[13px] mb-1">Prize Pool</div>
-            <div className="font-medium">{contest.prizePool}</div>
+            <div className="text-neutral-500 text-xs">Prize Pool</div>
+            <div className="font-medium">{contest.prizePool} ETH</div>
           </div>
           <div>
-            <div className="text-neutral-500 text-[13px] mb-1">Entry Fee</div>
+            <div className="text-neutral-500 text-xs">Entry Fee</div>
             <div className="font-medium">{contest.entryFee} ETH</div>
           </div>
           <div>
-            <div className="text-neutral-500 text-[13px] mb-1">Players</div>
-            <div className="font-medium">{contest.playerCount}</div>
+            <div className="text-neutral-500 text-xs">NFTs</div>
+            <div className="font-medium">{contest.nftCount}</div>
           </div>
           <div>
-            <div className="text-neutral-500 text-[13px] mb-1">Time Left</div>
+            <div className="text-neutral-500 text-xs">Time Left</div>
             <div className="font-medium">{contest.timeLeft}</div>
           </div>
         </div>
