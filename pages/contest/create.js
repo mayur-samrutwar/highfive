@@ -25,7 +25,7 @@ export default function CreateContest() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
-    deadline: '',
+    deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // 24 hours from now
     entryFee: '',
     nftCount: ''
   });
@@ -48,8 +48,7 @@ export default function CreateContest() {
     e.preventDefault();
     
     try {
-      const deadlineDate = new Date(formData.deadline);
-      const deadlineTimestamp = Math.floor(deadlineDate.getTime() / 1000);
+      const deadlineTimestamp = Math.floor(new Date(formData.deadline).getTime() / 1000);
       
       await writeContract({
         address: CONTRACT_ADDRESS,
@@ -101,9 +100,10 @@ export default function CreateContest() {
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
                 />
               </svg>
-              <p className="text-sm text-neutral-600">
-                <span className="font-medium">Admin Only:</span> Only admins can create contests.
-              </p>
+              <div className="text-sm text-neutral-600">
+                <p><span className="font-medium">Admin Only:</span> This page is restricted to contract administrators.</p>
+               
+              </div>
             </div>
           </div>
 
@@ -129,14 +129,15 @@ export default function CreateContest() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClasses}>Deadline</label>
+                  <label className={labelClasses}>
+                    Deadline (24 hours from now: GMT)
+                  </label>
                   <input
                     type="datetime-local"
                     name="deadline"
                     value={formData.deadline}
-                    onChange={handleChange}
-                    className={inputClasses}
-                    required
+                    className={`${inputClasses} bg-neutral-50 cursor-not-allowed`}
+                    disabled
                   />
                 </div>
 
