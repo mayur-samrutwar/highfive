@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const BUDGET_LIMIT = 10000; // $10,000 USD budget limit
-const API_KEY = process.env.NEXT_PUBLIC_UNLEASH_API_KEY;
+const POINTS_LIMIT = 1000; // Maximum points threshold
+const WEIGHTS = {
+  sales: 0.3,      // 30% weight for sales
+  transfers: 0.3,  // 30% weight for transfers
+  volume: 0.4      // 40% weight for volume
+};
 
 export default function NFTSelector({ contestId, nftCount }) {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [availableNFTs, setAvailableNFTs] = useState([]);
-  const [spentBudget, setSpentBudget] = useState(0);
+  const [spentPoints, setSpentPoints] = useState(0);
 
   useEffect(() => {
     const fetchNFTData = async () => {
@@ -25,7 +29,7 @@ export default function NFTSelector({ contestId, nftCount }) {
           method: 'GET',
           headers: {
             'accept': 'application/json',
-            'x-api-key': API_KEY
+            'x-api-key': process.env.NEXT_PUBLIC_UNLEASH_API_KEY
           }
         });
 
@@ -36,29 +40,57 @@ export default function NFTSelector({ contestId, nftCount }) {
         const marketplaceData = await response.json();
         console.log('Marketplace Data:', marketplaceData);
 
-        // Transform the data into NFT format
-        const nfts = marketplaceData.data.map((item, index) => ({
-          id: index + 1,
-          name: item.name,
-          price: Math.floor(Math.random() * 3000) + 1000, // Random price between 1000-4000
-          collection: item.name,
-          blockchain: item.blockchain,
-          image: item.thumbnail_url || "https://placehold.co/400x400",
-          volume: item.volume
-        }));
+        // Find maximum values for normalization
+        const maxValues = marketplaceData.data.reduce((acc, item) => ({
+          sales: Math.max(acc.sales, item.sales || 0),
+          transfers: Math.max(acc.transfers, item.transfers || 0),
+          volume: Math.max(acc.volume, item.volume || 0)
+        }), { sales: 0, transfers: 0, volume: 0 });
 
-        console.log('Transformed NFTs:', nfts);
+        // Transform the data into NFT format with points calculation
+        const nfts = marketplaceData.data.map((item, index) => {
+          // Normalize each metric to 0-100 scale
+          const normalizedScores = {
+            sales: (item.sales / maxValues.sales) * 100,
+            transfers: (item.transfers / maxValues.transfers) * 100,
+            volume: (item.volume / maxValues.volume) * 100
+          };
+
+          // Calculate weighted score (0-200 range)
+          const points = Math.round(
+            (normalizedScores.sales * WEIGHTS.sales +
+             normalizedScores.transfers * WEIGHTS.transfers +
+             normalizedScores.volume * WEIGHTS.volume) * 2
+          );
+
+          return {
+            id: index + 1,
+            name: item.name,
+            points: points,
+            collection: item.name,
+            blockchain: item.blockchain,
+            image: item.thumbnail_url || "https://placehold.co/400x400",
+            // Store raw metrics for display
+            metrics: {
+              sales: item.sales,
+              transfers: item.transfers,
+              volume: Math.round(item.volume)
+            }
+          };
+        });
+
+        console.log('Transformed NFTs with points:', nfts);
         setAvailableNFTs(nfts);
 
       } catch (error) {
         console.error('API Error:', error);
-        // Fallback to dummy data
+        // Fallback data with points instead of prices
         const fallbackData = [
-          { id: 1, name: "OpenSea", price: 4500, collection: "OpenSea", blockchain: "ethereum", image: "https://placehold.co/400x400" },
-          { id: 2, name: "Blur", price: 3800, collection: "Blur", blockchain: "ethereum", image: "https://placehold.co/400x400" },
-          { id: 3, name: "X2Y2", price: 2200, collection: "X2Y2", blockchain: "ethereum", image: "https://placehold.co/400x400" },
-          { id: 4, name: "LooksRare", price: 2800, collection: "LooksRare", blockchain: "ethereum", image: "https://placehold.co/400x400" },
-          { id: 5, name: "Rarible", price: 2100, collection: "Rarible", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 1, name: "OpenSea", points: 180, collection: "OpenSea", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 2, name: "Blur", points: 150, collection: "Blur", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 3, name: "X2Y2", points: 120, collection: "X2Y2", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 4, name: "LooksRare", points: 90, collection: "LooksRare", blockchain: "ethereum", image: "https://placehold.co/400x400" },
+          { id: 5, name: "Rarible", points: 60, collection: "Rarible", blockchain: "ethereum", image: "https://placehold.co/400x400" },
         ];
         setAvailableNFTs(fallbackData);
       }
@@ -70,10 +102,10 @@ export default function NFTSelector({ contestId, nftCount }) {
   const handleNFTSelect = (nft) => {
     if (selectedNFTs.find(n => n.id === nft.id)) {
       setSelectedNFTs(selectedNFTs.filter(n => n.id !== nft.id));
-      setSpentBudget(spentBudget - nft.price);
-    } else if (selectedNFTs.length < nftCount && spentBudget + nft.price <= BUDGET_LIMIT) {
+      setSpentPoints(spentPoints - nft.points);
+    } else if (selectedNFTs.length < nftCount && spentPoints + nft.points <= POINTS_LIMIT) {
       setSelectedNFTs([...selectedNFTs, nft]);
-      setSpentBudget(spentBudget + nft.price);
+      setSpentPoints(spentPoints + nft.points);
     }
   };
 
@@ -95,9 +127,9 @@ export default function NFTSelector({ contestId, nftCount }) {
           <p className="text-lg font-medium text-black">{selectedNFTs.length}/{nftCount} NFTs</p>
         </div>
         <div>
-          <p className="text-neutral-500 text-sm">Budget Used</p>
+          <p className="text-neutral-500 text-sm">Points Used</p>
           <p className="text-lg font-medium text-black">
-            ${spentBudget.toLocaleString()} / ${BUDGET_LIMIT.toLocaleString()}
+            {spentPoints} / {POINTS_LIMIT} pts
           </p>
         </div>
       </div>
@@ -107,7 +139,7 @@ export default function NFTSelector({ contestId, nftCount }) {
           const isSelected = selectedNFTs.find(n => n.id === nft.id);
           const isDisabled = !isSelected && (
             selectedNFTs.length >= nftCount || 
-            spentBudget + nft.price > BUDGET_LIMIT
+            spentPoints + nft.points > POINTS_LIMIT
           );
 
           return (
@@ -136,7 +168,14 @@ export default function NFTSelector({ contestId, nftCount }) {
                 <div className="space-y-2">
                   <h3 className="text-lg font-medium text-black">{nft.name}</h3>
                   <p className="text-neutral-500">{nft.collection}</p>
-                  <p className="text-xl font-medium text-black">${nft.price.toLocaleString()}</p>
+                  <p className="text-xl font-medium text-black">{nft.points} pts</p>
+                  {nft.metrics && (
+                    <div className="text-xs text-neutral-500 space-y-1">
+                      <p>Sales: {nft.metrics.sales}</p>
+                      <p>Transfers: {nft.metrics.transfers}</p>
+                      <p>Volume: ${nft.metrics.volume.toLocaleString()}</p>
+                    </div>
+                  )}
                 </div>
               </div>
               
